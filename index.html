@@ -2,15 +2,15 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>💜 Surprise</title>
 
 <style>
 html,body{
   margin:0;
   padding:0;
-  overflow:hidden;
   background:#050014;
+  overflow:hidden;
   font-family:sans-serif;
 }
 canvas{
@@ -25,18 +25,18 @@ canvas{
   flex-direction:column;
   justify-content:center;
   align-items:center;
-  color:#e6ddff;
   background:radial-gradient(circle,#2a145a,#050014);
+  color:#fff;
   z-index:3;
 }
 .hidden{display:none}
 .btn{
   margin-top:30px;
-  padding:14px 30px;
-  border-radius:30px;
+  padding:14px 34px;
+  border-radius:40px;
   background:#6b4bff;
   color:#fff;
-  cursor:pointer;
+  font-size:18px;
 }
 .gift{
   font-size:80px;
@@ -44,7 +44,7 @@ canvas{
 }
 @keyframes float{
   0%,100%{transform:translateY(0)}
-  50%{transform:translateY(-15px)}
+  50%{transform:translateY(-16px)}
 }
 input{
   padding:12px 18px;
@@ -60,9 +60,8 @@ input{
   justify-content:center;
   align-items:center;
   text-align:center;
-  font-size:32px;
-  line-height:1.4;
-  color:#fff;
+  font-size:30px;
+  line-height:1.5;
   opacity:0;
   transition:opacity 2s;
   z-index:4;
@@ -89,8 +88,7 @@ input{
 
 <div id="finalText">
 💌 สุขสันต์วันครบรอบนะครับ<br>
-เค้ารักเบบี๋มาก ๆ เลย<br>
-ขอบคุณที่เข้ามาเป็นจักรวาลของเค้า 💜
+ขอบคุณที่เป็นจักรวาลของเค้า 💜
 </div>
 
 <audio id="bgm" preload="auto">
@@ -98,53 +96,53 @@ input{
 </audio>
 
 <script>
-const canvas=c, ctx=canvas.getContext("2d");
+/* ===== SAFE DOM ===== */
+const canvas=document.getElementById("c");
+const ctx=canvas.getContext("2d");
+const page1=document.getElementById("page1");
+const page2=document.getElementById("page2");
+const pass=document.getElementById("pass");
+const passBtn=document.getElementById("passBtn");
+const finalText=document.getElementById("finalText");
+const audio=document.getElementById("bgm");
+
+/* ===== RESIZE ===== */
 function resize(){
   canvas.width=innerWidth;
   canvas.height=innerHeight;
 }
 resize(); addEventListener("resize",resize);
 
-/* ===== AUDIO ===== */
-const audio=bgm;
+/* ===== AUDIO (iOS SAFE) ===== */
 let audioCtx, analyser, dataArray;
-
 function startAudio(){
   if(audioCtx) return;
-  audio.muted=true; audio.play();
-  audioCtx=new (AudioContext||webkitAudioContext)();
-  const src=audioCtx.createMediaElementSource(audio);
+  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
   analyser=audioCtx.createAnalyser();
   analyser.fftSize=256;
   dataArray=new Uint8Array(analyser.frequencyBinCount);
+  const src=audioCtx.createMediaElementSource(audio);
   src.connect(analyser);
   analyser.connect(audioCtx.destination);
-  audioCtx.resume().then(()=>{
-    audio.muted=false;
-    audio.play();
-  });
+  audio.play();
 }
 
-/* ===== SCREENS ===== */
+/* ===== UI FLOW ===== */
 page1.onclick=()=>{
   startAudio();
-  starBurst(innerWidth/2,innerHeight/2,200);
-  setTimeout(()=>{
-    page1.classList.add("hidden");
-    page2.classList.remove("hidden");
-  },700);
+  page1.classList.add("hidden");
+  page2.classList.remove("hidden");
 };
 
 passBtn.onclick=()=>{
   if(pass.value==="060225"){
     page2.classList.add("hidden");
   }else{
-    pass.value="";
     alert("รหัสไม่ถูกต้อง");
   }
 };
 
-/* ===== SPACE ===== */
+/* ===== BACKGROUND ===== */
 function drawSpace(){
   const g=ctx.createRadialGradient(
     canvas.width/2,canvas.height/2,0,
@@ -158,47 +156,20 @@ function drawSpace(){
 
 /* ===== STARS ===== */
 const stars=[...Array(200)].map(()=>({
-  x:Math.random()*canvas.width,
-  y:Math.random()*canvas.height,
+  x:Math.random()*innerWidth,
+  y:Math.random()*innerHeight,
   r:Math.random()*1.5+.3,
-  t:Math.random()*Math.PI*2
+  t:Math.random()*6
 }));
 function drawStars(){
   stars.forEach(s=>{
     s.t+=.02;
     ctx.beginPath();
     ctx.arc(s.x,s.y,s.r+Math.sin(s.t)*.6,0,Math.PI*2);
-    ctx.fillStyle="rgba(255,255,255,.8)";
+    ctx.fillStyle="rgba(255,255,255,.9)";
     ctx.fill();
   });
 }
-
-/* ===== METEOR ===== */
-class Meteor{
-  constructor(){this.reset()}
-  reset(){
-    this.x=Math.random()*canvas.width;
-    this.y=-50;
-    this.vx=-6;
-    this.vy=10;
-    this.life=100;
-  }
-  update(){
-    this.x+=this.vx;
-    this.y+=this.vy;
-    this.life--;
-    if(this.life<0) this.reset();
-  }
-  draw(){
-    ctx.strokeStyle="rgba(200,180,255,.8)";
-    ctx.lineWidth=2;
-    ctx.beginPath();
-    ctx.moveTo(this.x,this.y);
-    ctx.lineTo(this.x+this.vx*4,this.y-this.vy*4);
-    ctx.stroke();
-  }
-}
-const meteors=[...Array(3)].map(()=>new Meteor());
 
 /* ===== HEART ===== */
 function heart(t){
@@ -214,91 +185,30 @@ class FloatingHeart{
     this.y=canvas.height+100;
     this.s=Math.random()*.4+.3;
     this.v=Math.random()*.6+.4;
-    this.a=Math.random()*Math.PI*2;
+    this.a=Math.random()*6;
   }
   update(b){
-    this.y-=this.v+b*5;
+    this.y-=this.v+b*4;
     this.a+=.03;
-    this.x+=Math.sin(this.a)*.8;
+    this.x+=Math.sin(this.a)*.6;
     if(this.y<-100) this.reset();
   }
   draw(b){
     ctx.beginPath();
-    for(let t=0;t<=Math.PI*2;t+=.18){
+    for(let t=0;t<=Math.PI*2;t+=.2){
       const p=heart(t);
       const x=this.x+p.x*this.s*(1+b);
       const y=this.y-p.y*this.s*(1+b);
       t?ctx.lineTo(x,y):ctx.moveTo(x,y);
     }
-    ctx.strokeStyle="rgba(190,160,255,1)";
+    ctx.strokeStyle="rgba(200,170,255,1)";
     ctx.lineWidth=2.5;
-    ctx.shadowBlur=25;
+    ctx.shadowBlur=20;
     ctx.shadowColor="#7a5cff";
     ctx.stroke();
   }
 }
-const hearts=[...Array(18)].map(()=>new FloatingHeart());
-
-/* ===== PARTICLES ===== */
-let particles=[];
-function starBurst(x,y,n){
-  for(let i=0;i<n;i++){
-    particles.push({
-      x,y,
-      vx:(Math.random()-.5)*12,
-      vy:(Math.random()-.5)*12,
-      life:80
-    });
-  }
-}
-function drawParticles(){
-  particles.forEach(p=>{
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,3,0,Math.PI*2);
-    ctx.fillStyle="rgba(200,170,255,.9)";
-    ctx.fill();
-    p.x+=p.vx; p.y+=p.vy; p.life--;
-  });
-  particles=particles.filter(p=>p.life>0);
-}
-
-/* ===== IMAGE DRAW ===== */
-const img=new Image();
-img.src="final.png";
-let imgPts=[],drawN=0;
-
-img.onload=()=>{
-  for(let y=0;y<img.height;y+=6){
-    for(let x=0;x<img.width;x+=6){
-      imgPts.push({x,y});
-    }
-  }
-};
-
-function drawImage(){
-  if(!img.complete) return;
-  const scale=Math.min(canvas.width/img.width,canvas.height/img.height)*.5;
-  const ox=canvas.width/2-(img.width*scale)/2;
-  const oy=canvas.height/2-(img.height*scale)/2;
-
-  ctx.strokeStyle="rgba(200,170,255,.9)";
-  ctx.lineWidth=2;
-  ctx.beginPath();
-
-  for(let i=0;i<30 && drawN<imgPts.length;i++,drawN++){
-    const p=imgPts[drawN];
-    const x=ox+p.x*scale;
-    const y=oy+p.y*scale;
-    drawN===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-  }
-  ctx.stroke();
-}
-
-/* ===== SONG END ===== */
-audio.addEventListener("ended",()=>{
-  finalText.classList.add("show");
-  starBurst(canvas.width/2,canvas.height/2,500);
-});
+const hearts=[...Array(16)].map(()=>new FloatingHeart());
 
 /* ===== LOOP ===== */
 function loop(){
@@ -312,13 +222,10 @@ function loop(){
   }
 
   hearts.forEach(h=>{h.update(beat);h.draw(beat)});
-  meteors.forEach(m=>{m.update();m.draw()});
-  drawParticles();
-  drawImage();
-
   requestAnimationFrame(loop);
 }
 loop();
 </script>
+
 </body>
 </html>
